@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Пойдем же мы с тобой вперед</title>
+<title>qwsoab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300&display=swap" rel="stylesheet">
@@ -20,8 +20,8 @@
   .vignette {
     position: fixed; inset: 0; z-index: 1; pointer-events: none;
     background:
-      radial-gradient(ellipse at 50% 62%, transparent 0%, rgba(0,0,0,.35) 55%, rgba(0,0,0,.92) 100%),
-      linear-gradient(to bottom, rgba(0,0,0,.55) 0%, transparent 45%);
+      radial-gradient(ellipse at 50% 62%, transparent 0%, rgba(0,0,0,.18) 55%, rgba(0,0,0,.66) 100%),
+      linear-gradient(to bottom, rgba(0,0,0,.22) 0%, transparent 40%);
   }
   .grain {
     position: fixed; inset: -50%; z-index: 2; pointer-events: none; opacity: .07;
@@ -99,6 +99,7 @@
   }
 
   .outro .star { margin-bottom: 0; height: 200px; }
+  .line { text-wrap: balance; }
 
   /* ───── меню справа ───── */
   nav.side {
@@ -178,35 +179,7 @@
     <div class="hint">листай</div>
   </section>
 
-  <section>
-    <div class="star"><i></i></div>
-    <div class="stanza">
-      <span class="line">Пойдем же мы с тобой вперед</span>
-      <span class="line">По улочкам, где нас под небом вечер ждет</span>
-      <span class="line">Что распластался, как под наркозом пациент</span>
-      <span class="line">По улочкам наполовину молчаливым</span>
-    </div>
-  </section>
-
-  <section>
-    <div class="star"><i></i></div>
-    <div class="stanza">
-      <span class="line">В их шуме еще живы</span>
-      <span class="line">Дешевые ночлежки, где никогда не спят</span>
-      <span class="line">И кабаки с опилками, что под ногой шуршат</span>
-      <span class="line">Улочки, что тянутся, как роковой момент</span>
-    </div>
-  </section>
-
-  <section>
-    <div class="star"><i></i></div>
-    <div class="stanza">
-      <span class="line">В тоскливом споре, где твой оппонент</span>
-      <span class="line">Готовится тебя сразить, задав вопрос…</span>
-      <span class="line">Только не спрашивай какой</span>
-      <span class="line">Уже уходим мы с тобой</span>
-    </div>
-  </section>
+  <!-- строфы случайного текста вставляются сюда скриптом -->
 
   <section class="outro">
     <div class="star"><i></i></div>
@@ -214,8 +187,33 @@
 </main>
 
 <script>
+/* ───────── тексты: при каждой загрузке выбирается случайный ───────── */
+const TEXTS = [
+  [
+    ['Пойдем же мы с тобой вперед', 'По улочкам, где нас под небом вечер ждет',
+     'Что распластался, как под наркозом пациент', 'По улочкам наполовину молчаливым'],
+    ['В их шуме еще живы', 'Дешевые ночлежки, где никогда не спят',
+     'И кабаки с опилками, что под ногой шуршат', 'Улочки, что тянутся, как роковой момент'],
+    ['В тоскливом споре, где твой оппонент', 'Готовится тебя сразить, задав вопрос…',
+     'Только не спрашивай какой', 'Уже уходим мы с тобой']
+  ],
+  [
+    ['Не все смогли этим пройти путём', 'Их запах смоет проливным дождём'],
+    ['Никто не знал, что не скажет «пока» мне', 'От них остались лишь камни на камне']
+  ],
+  [
+    ['Не так уж страшно быть обычным', 'И постучать туда, куда вчера бы ты полез с отмычкой'],
+    ['Тебе останется на сдачу опыт', 'И всё нормально — хорошо, а не нормально — похуй']
+  ],
+  [
+    ['Свобода может быть не нужной', 'Бросается в глаза, как мы разбрасывались дружбой'],
+    ['Я подумал о себе, так необычно', 'И нечаянно остался в тишине, она была необычайна'],
+    ['И чья вина, что мы такими были?', 'Сколько вина, что мы такими стали?']
+  ]
+];
+
 /* ───────── текст: разбивка на слова и появление ───────── */
-document.querySelectorAll('.stanza').forEach(st => {
+function splitWords(st) {
   let n = 0;
   st.querySelectorAll('.line').forEach((line, li) => {
     const words = line.textContent.trim().split(/\s+/);
@@ -228,11 +226,43 @@ document.querySelectorAll('.stanza').forEach(st => {
       line.appendChild(s); n++;
     });
   });
-});
+}
 const io = new IntersectionObserver(es => es.forEach(e => {
   e.target.classList.toggle('in', e.isIntersecting);
 }), { threshold: 0.45 });
+document.querySelectorAll('.stanza').forEach(splitWords);
 document.querySelectorAll('section:not(.intro)').forEach(s => io.observe(s));
+
+/* случайный номер из n, не совпадающий с прошлым разом; ?text=N и ?bg=N в адресе задают его вручную */
+const QS = new URLSearchParams(location.search);
+function pickRandom(key, n) {
+  const forced = parseInt(QS.get(key), 10);
+  if (forced >= 0 && forced < n) return forced;
+  let last = -1, i;
+  try { last = parseInt(localStorage.getItem('qwsoab-' + key) ?? '-1', 10); } catch (e) {}
+  do { i = Math.floor(Math.random() * n); } while (i === last && n > 1);
+  try { localStorage.setItem('qwsoab-' + key, String(i)); } catch (e) {}
+  return i;
+}
+let current = -1;
+function showRandomText() {
+  const i = current = pickRandom('text', TEXTS.length);
+  const outro = document.querySelector('.outro');
+  document.querySelectorAll('section.gen').forEach(s => { io.unobserve(s); s.remove(); });
+  let first = null;
+  TEXTS[i].forEach(lines => {
+    const sec = document.createElement('section');
+    sec.className = 'gen';
+    const star = document.createElement('div'); star.className = 'star'; star.appendChild(document.createElement('i'));
+    const st = document.createElement('div'); st.className = 'stanza';
+    lines.forEach(l => { const sp = document.createElement('span'); sp.className = 'line'; sp.textContent = l; st.appendChild(sp); });
+    sec.append(star, st); splitWords(st);
+    outro.before(sec); io.observe(sec);
+    first = first || sec;
+  });
+  return first;
+}
+showRandomText();
 
 /* ───────── разделы: Главная / Прочее ───────── */
 function route() {
@@ -253,6 +283,114 @@ function resize() {
   W = innerWidth; H = innerHeight;
   cv.width = W * DPR; cv.height = H * DPR;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (W !== skyW) buildSky();          // на телефоне высота скачет из-за адресной строки — небо не пересобираем
+}
+
+/* ───────── небо: туманность, звёзды, метеоры ───────── */
+let skyW = 0, stars = [], neb = null, nextShoot = 4;
+const shoots = [], smoke = [];
+const STAR_COLORS = ['255,255,255', '255,255,255', '200,215,255', '255,225,190', '185,200,255'];
+/* фон: 0 — космос, 1 — дождь с грозой, 2 — северное сияние, 3 — светлячки */
+const scene = pickRandom('bg', 4);
+const NEB_COLORS = [
+  ['95,60,210', '40,90,215', '205,60,150', '30,150,175', '120,70,200'],
+  ['40,60,105', '65,80,115', '30,45,85', '50,60,90'],
+  ['20,60,90', '30,40,110', '15,70,70'],
+  ['20,80,55', '60,70,20', '15,55,65', '35,90,40']
+][scene];
+
+/* дождь и молнии */
+const drops = []; let flash = 0, nextFlash = 5;
+function drawRain(t, dt, A) {
+  const n = Math.min(300, Math.round(W * H / 4500));
+  while (drops.length < n) drops.push({ x: Math.random() * 1.3 - .15, y: Math.random(), z: .25 + Math.random() * .75 });
+  if (t > nextFlash) { flash = 1; nextFlash = t + 5 + Math.random() * 9; }
+  flash *= Math.pow(.004, dt);
+  const fl = flash * (.6 + .4 * Math.sin(t * 60));
+  if (fl > .01) { ctx.fillStyle = `rgba(170,190,255,${fl * .22})`; ctx.fillRect(0, 0, W, H); }
+  const slant = -.16 + wind * .6;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const d = drops[i], v = dt * (.7 + d.z * 1.1);
+    d.y += v; d.x += v * slant * H / W;
+    if (d.y > 1.05) { d.y = -.05; d.x = Math.random() * 1.3 - .15; }
+    const x = d.x * W + par * d.z, y = d.y * H, L = 10 + d.z * 26;
+    ctx.strokeStyle = `rgba(175,200,255,${(.08 + d.z * .3) * A})`; ctx.lineWidth = .5 + d.z * .9;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - slant * L, y - L); ctx.stroke();
+  }
+}
+
+/* северное сияние: рисуется в маленький холст столбиками и растягивается — получается мягкое свечение */
+let au = null, auG = [];
+function drawAurora(t, A) {
+  const aw = Math.ceil(W / 6), ah = Math.ceil(H / 6);
+  if (!au || au.width !== aw || au.height !== ah) {
+    au = document.createElement('canvas'); au.width = aw; au.height = ah;
+    const c0 = au.getContext('2d');
+    auG = [['90,255,160', '40,200,190', '130,80,220'], ['80,240,200', '60,150,230', '170,70,200'], ['130,255,140', '40,210,160', '90,90,230']].map(p => {
+      const g = c0.createLinearGradient(0, 0, 0, 1);
+      g.addColorStop(0, `rgba(${p[0]},0)`); g.addColorStop(.07, `rgba(${p[0]},.85)`);
+      g.addColorStop(.4, `rgba(${p[1]},.32)`); g.addColorStop(.75, `rgba(${p[2]},.14)`); g.addColorStop(1, `rgba(${p[2]},0)`);
+      return g;
+    });
+  }
+  const c = au.getContext('2d');
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  c.clearRect(0, 0, aw, ah); c.globalCompositeOperation = 'lighter';
+  for (let b = 0; b < 3; b++) for (let x = 0; x < aw; x++) {
+    const u = x / aw;
+    const y0 = ah * (.34 + b * .085) + Math.sin(u * 5 + t * .22 + b * 2) * ah * .07 + Math.sin(u * 11 - t * .31 + b) * ah * .03;
+    const h = ah * (.26 + .1 * Math.sin(u * 7 + t * .4 + b * 1.3));
+    const a = (.45 + .55 * Math.sin(u * 9 + t * .5 + b * 2.4)) * (.75 + .25 * Math.sin(x * 1.9 + t * 2 + b));
+    if (a <= 0) continue;
+    c.setTransform(1, 0, 0, -h, x, y0); c.globalAlpha = a * .8; c.fillStyle = auG[b]; c.fillRect(0, 0, 1, 1);
+  }
+  ctx.globalAlpha = A * .85; ctx.drawImage(au, 0, 0, W, H); ctx.globalAlpha = 1;
+}
+
+/* светлячки и крупное боке */
+const flies = Array.from({ length: 42 }, (_, i) => {
+  const big = i < 8;
+  return { x: Math.random(), y: Math.random(), p: Math.random() * 6.28, s: .3 + Math.random() * .6,
+           r: big ? 45 + Math.random() * 45 : 5 + Math.random() * 11, k: big ? .13 : 1,
+           c: Math.random() < .6 ? '200,255,120' : '255,210,120' };
+});
+function drawFlies(t, dt, A) {
+  for (const f of flies) {
+    f.x += (Math.sin(t * f.s + f.p) * .018 + Math.cos(t * .13 + f.p * 3) * .006) * dt;
+    f.y += (Math.cos(t * f.s * .8 + f.p * 2) * .02 - .004) * dt;
+    f.x = (f.x + 1) % 1; f.y = (f.y + 1) % 1;
+    const x = f.x * W + par, y = ((f.y * H - scrollY * .03) % H + H) % H;
+    const pul = Math.pow(Math.max(0, Math.sin(t * f.s * 2.2 + f.p)), 2);
+    const a = (.15 + .85 * pul) * A * f.k, r = f.r * (1 + pul * .6);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(255,255,230,${a})`); g.addColorStop(.2, `rgba(${f.c},${a * .6})`); g.addColorStop(1, `rgba(${f.c},0)`);
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+}
+function buildSky() {
+  skyW = W;
+  const n = Math.round(Math.min(460, W * Math.max(H, 600) / 3600));
+  stars = Array.from({ length: n }, () => {
+    const z = Math.pow(Math.random(), 2.2);
+    return { x: Math.random(), y: Math.random(), z, p: Math.random() * 6.28, s: .5 + Math.random() * 2.6,
+             c: STAR_COLORS[Math.random() * STAR_COLORS.length | 0] };
+  });
+  /* туманность рисуется один раз в маленький холст и потом просто растягивается */
+  neb = document.createElement('canvas');
+  const nw = neb.width = Math.ceil(W / 4) + 50, nh = neb.height = Math.ceil(Math.max(H, 600) / 4) + 50;
+  const n2 = neb.getContext('2d'); n2.globalCompositeOperation = 'lighter';
+  const m = Math.max(nw, nh);
+  for (let i = 0; i < 11; i++) {
+    const k = i / 10;                                   // вдоль диагональной «млечной» полосы
+    const x = nw * (.05 + k * .9) + (Math.random() - .5) * nw * .3;
+    const y = nh * (.12 + k * .5) + (Math.random() - .5) * nh * .28;
+    const r = m * (.18 + Math.random() * .3);
+    const g = n2.createRadialGradient(x, y, 0, x, y, r);
+    const c = NEB_COLORS[(i + (Math.random() * 2 | 0)) % NEB_COLORS.length];
+    g.addColorStop(0, `rgba(${c},.17)`); g.addColorStop(.5, `rgba(${c},.06)`); g.addColorStop(1, `rgba(${c},0)`);
+    n2.fillStyle = g; n2.fillRect(0, 0, nw, nh);
+  }
 }
 addEventListener('resize', resize); resize();
 
@@ -266,7 +404,7 @@ addEventListener('pointermove', e => {
   parT = (e.clientX / W - .5) * -18;
 });
 let lastSY = scrollY;
-addEventListener('scroll', () => { gust += Math.min(.5, Math.abs(scrollY - lastSY) / H * .9); lastSY = scrollY; }, { passive: true });
+addEventListener('scroll', () => { gust = Math.min(1, gust + Math.min(.5, Math.abs(scrollY - lastSY) / H * .9)); lastSY = scrollY; }, { passive: true });
 
 const sparks = [];
 const motes = Array.from({ length: 46 }, () => ({
@@ -307,6 +445,80 @@ function frame(ts) {
   ctx.shadowBlur = 0;
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, W, H);
+
+  /* ── небо ── */
+  const skyA = ease(t / 3.5), sc = scrollY;
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = skyA * (.85 + .15 * Math.sin(t * .23));
+  ctx.drawImage(neb, -100 + Math.sin(t * .05) * 40 + par * .6, -100 + Math.cos(t * .04) * 40 - (sc * .015) % 60,
+                neb.width * 4, neb.height * 4);
+  ctx.globalAlpha = 1;
+  if (scene === 1) drawRain(t, dt, skyA);
+  if (scene === 2) drawAurora(t, skyA);
+  if (scene === 3) drawFlies(t, dt, skyA);
+  if (scene === 0 || scene === 2) for (const s of stars) {
+    const x = ((s.x * W + par * (.3 + s.z * 2)) % W + W) % W;
+    const y = ((s.y * H - sc * (.015 + s.z * .07)) % H + H) % H;
+    const a = (.22 + .78 * s.z) * (.55 + .45 * Math.sin(t * s.s + s.p)) * skyA;
+    const r = .45 + s.z * 1.25;
+    ctx.fillStyle = `rgba(${s.c},${a})`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill();
+    if (s.z > .8) {                                       // яркие звёзды — с лучами
+      const L = r * (5 + 4 * Math.sin(t * s.s + s.p));
+      ctx.fillStyle = `rgba(${s.c},${a * .45})`;
+      ctx.fillRect(x - L, y - .35, L * 2, .7); ctx.fillRect(x - .35, y - L, .7, L * 2);
+    }
+  }
+  /* метеоры */
+  if ((scene === 0 || scene === 2) && t > nextShoot) {
+    const dir = Math.random() < .5 ? 1 : -1;
+    shoots.push({ x: W * (dir > 0 ? Math.random() * .6 : .4 + Math.random() * .6), y: Math.random() * H * .35,
+                  a: .3 + Math.random() * .35, v: 650 + Math.random() * 500, life: 1, dir });
+    nextShoot = t + 3 + Math.random() * 6;
+  }
+  ctx.lineCap = 'round';
+  for (let i = shoots.length - 1; i >= 0; i--) {
+    const s = shoots[i];
+    s.life -= dt * 1.15; if (s.life <= 0) { shoots.splice(i, 1); continue; }
+    const ux = Math.cos(s.a) * s.dir, uy = Math.sin(s.a);
+    s.x += ux * s.v * dt; s.y += uy * s.v * dt;
+    const al = Math.sin(Math.PI * s.life), L = 170;
+    const g2 = ctx.createLinearGradient(s.x, s.y, s.x - ux * L, s.y - uy * L);
+    g2.addColorStop(0, `rgba(255,255,255,${al})`); g2.addColorStop(.3, `rgba(190,210,255,${al * .4})`); g2.addColorStop(1, 'rgba(150,180,255,0)');
+    ctx.strokeStyle = g2; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - ux * L, s.y - uy * L); ctx.stroke();
+    ctx.fillStyle = `rgba(255,255,255,${al})`;
+    ctx.beginPath(); ctx.arc(s.x, s.y, 1.6, 0, 6.283); ctx.fill();
+  }
+  /* луна */
+  if (scene === 0) {
+    const mr = Math.max(16, Math.min(W, H) * .045), mx = W * .15 + par * .8, my = H * .2 - (sc * .02) % (H * .1);
+    let mg = ctx.createRadialGradient(mx, my, mr * .6, mx, my, mr * 5);
+    mg.addColorStop(0, `rgba(200,215,255,${.2 * skyA})`); mg.addColorStop(1, 'rgba(200,215,255,0)');
+    ctx.fillStyle = mg; ctx.fillRect(mx - mr * 5, my - mr * 5, mr * 10, mr * 10);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.save(); ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.283); ctx.clip();
+    ctx.fillStyle = `rgba(236,232,220,${skyA})`; ctx.fillRect(mx - mr, my - mr, mr * 2, mr * 2);
+    ctx.fillStyle = '#04040a';
+    ctx.beginPath(); ctx.arc(mx + mr * .48, my - mr * .22, mr * .98, 0, 6.283); ctx.fill();
+    ctx.restore();
+  }
+  /* орбиты вокруг пламени */
+  ctx.globalCompositeOperation = 'lighter';
+  const ocx = cx, ocy = fy - cw * .9;
+  const ob = Math.min(cw, W * .075);                    // на узком экране орбиты меньше, чтобы помещались
+  for (let i = 0; scene === 0 && i < 3; i++) {
+    const rx = ob * (3.1 + i * 1.75), ry = rx * .3, rot = -.22 + i * .07;
+    ctx.strokeStyle = `rgba(255,235,210,${(.1 - i * .02) * skyA})`; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(ocx, ocy, rx, ry, rot, 0, 6.283); ctx.stroke();
+    const ang = t * (.42 - i * .11) * (i % 2 ? -1 : 1) + i * 2.1;
+    const ex = Math.cos(ang) * rx, ey = Math.sin(ang) * ry;
+    const px = ocx + ex * Math.cos(rot) - ey * Math.sin(rot), py = ocy + ex * Math.sin(rot) + ey * Math.cos(rot);
+    let og = ctx.createRadialGradient(px, py, 0, px, py, 9);
+    og.addColorStop(0, `rgba(255,240,215,${.9 * skyA})`); og.addColorStop(.25, `rgba(255,190,120,${.35 * skyA})`); og.addColorStop(1, 'rgba(255,170,90,0)');
+    ctx.fillStyle = og; ctx.fillRect(px - 9, py - 9, 18, 18);
+  }
+  ctx.globalCompositeOperation = 'source-over';
 
   /* свет в комнате */
   let g = ctx.createRadialGradient(cx, fy - fh * .4, 0, cx, fy - fh * .4, Math.max(W, H) * .8);
@@ -402,6 +614,21 @@ function frame(ts) {
     g = ctx.createRadialGradient(cx, fy + fw * .05, 0, cx, fy + fw * .05, fw * .95);
     g.addColorStop(0, 'rgba(70,130,255,.6)'); g.addColorStop(1, 'rgba(40,80,255,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, fy + fw * .05, fw * .95, fw * .6, 0, 0, 6.283); ctx.fill();
+
+    /* дым */
+    if (ignite > .6 && Math.random() < dt * 7) smoke.push({
+      x: cx + sway, y: fy - fh * .92, vx: (Math.random() - .5) * 10 + wind * 120, vy: -(26 + Math.random() * 22),
+      life: 1, r: fw * .5, p: Math.random() * 6.28
+    });
+    for (let i = smoke.length - 1; i >= 0; i--) {
+      const s = smoke[i];
+      s.life -= dt * .28; if (s.life <= 0) { smoke.splice(i, 1); continue; }
+      s.x += (s.vx + Math.sin(t * 1.3 + s.p) * 14) * dt; s.y += s.vy * dt; s.r += dt * cw * .38;
+      const a = s.life * (1 - s.life) * 4 * .04;
+      const sg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
+      sg.addColorStop(0, `rgba(190,180,175,${a})`); sg.addColorStop(1, 'rgba(190,180,175,0)');
+      ctx.fillStyle = sg; ctx.fillRect(s.x - s.r, s.y - s.r, s.r * 2, s.r * 2);
+    }
 
     /* искры */
     if (Math.random() < dt * (1.6 + gust * 30)) sparks.push({
